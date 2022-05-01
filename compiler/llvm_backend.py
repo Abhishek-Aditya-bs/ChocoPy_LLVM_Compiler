@@ -207,7 +207,42 @@ class LLVMBackend(Backend):
         self.builder.position_at_end(bb_end)
 
     def BinaryExpr(self, node: BinaryExpr) -> Optional[ICMPInstr]:
-        pass
+
+        if self.builder is None:
+            raise Exception("No builder is active")
+
+        left_val = self.visit(node.left)
+        right_val = self.visit(node.right)
+
+        # Perform comparison
+        if node.operator == "==":
+            return self.builder.icmp_signed("==", left_val, right_val)
+        elif node.operator == "!=":
+            return self.builder.icmp_signed("!=", left_val, right_val)
+        elif node.operator == "<":
+            return self.builder.icmp_signed("<",  left_val, right_val)
+        elif node.operator == "<=":
+            return self.builder.icmp_signed("<=", left_val, right_val)
+        elif node.operator == ">":
+            return self.builder.icmp_signed(">", left_val, right_val)
+        elif node.operator == ">=":
+            return self.builder.icmp_signed(">=", left_val, right_val)
+        elif node.operator == "+":
+            return self.builder.add(left_val, right_val)
+        elif node.operator == "-":
+            return self.builder.sub(left_val, right_val)
+        elif node.operator == "*":
+            return self.builder.mul(left_val, right_val)
+        elif node.operator == "/":
+            return self.builder.sdiv(left_val, right_val)
+        elif node.operator == "%":
+            return self.builder.srem(left_val, right_val)
+        elif node.operator == "and":
+            return self.builder.and_(left_val, right_val)
+        elif node.operator == "or":
+            return self.builder.or_(left_val, right_val)
+        else:
+            raise Exception("Invalid binary operator")
 
     def Identifier(self, node: Identifier) -> LoadInstr:
         pass
