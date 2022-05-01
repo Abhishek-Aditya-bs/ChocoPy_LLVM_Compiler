@@ -252,7 +252,43 @@ class LLVMBackend(Backend):
         return self.builder.load(var_addr)
 
     def IfExpr(self, node: IfExpr) -> PhiInstr:
-        pass
+        if self.builder is None:
+            raise Exception("No builder is active")
+
+        # Create basic blocks
+        bb_cond = self.builder.append_basic_block(self.module.get_unique_name("if.cond"))
+        bb_then = self.builder.append_basic_block(self.module.get_unique_name("if.then"))
+        bb_else = self.builder.append_basic_block(self.module.get_unique_name("if.else"))
+        bb_end = self.builder.append_basic_block(self.module.get_unique_name("if.end"))
+
+        # Create branch
+        self.builder.branch(bb_cond)
+
+        # Condition block
+        with self.builder.goto_block(bb_cond):
+            condition = self.visit(node.condition)
+            self.builder.cbranch(condition, bb_then, bb_else)
+
+        # Then block
+        with self.builder.goto_block(bb_then):
+            then_value = self.visit(node.thenExpr)
+            self.builder.branch(bb_end)
+
+        # Else block
+        with self.builder.goto_block(bb_else):
+            else_value = self.visit(node.elseExpr)
+            self.builder.branch(bb_end)
+
+        self.builder.position_at_end(bb_end)
+
+        phi_node = self.builder.phi(self._get_llvm_type(node.inferredType.className))
+
+        # End block
+        with self.builder.goto_block(bb_end):
+            phi_node.add_incoming(then_value, bb_then)
+            phi_node.add_incoming(else_value, bb_else)
+
+        return phi_node
 
     ##################################
     #      END OF IMPLEMENTATION     #
