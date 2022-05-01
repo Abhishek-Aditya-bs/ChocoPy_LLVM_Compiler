@@ -117,7 +117,36 @@ class LLVMBackend(Backend):
         pass
 
     def WhileStmt(self, node: WhileStmt):
-        pass
+        # Data members of while AST nodes can be found at ./astnodes/whilestmt.py
+        
+        if self.builder is None:
+            raise Exception("No builder is active")
+        
+        # Defining 3 basic blocks of while
+        bb_condition = self.builder.append_basic_block(
+            self.module.get_unique_name("while.condition")
+        )
+        bb_body = self.builder.append_basic_block(
+            self.module.get_unique_name("while.body")
+        )
+        bb_end = self.builder.append_basic_block(
+            self.module.get_unique_name("while.end")
+        )
+
+        # Defining control flow because it doesn't explicitly go sequentially
+        self.builder.branch(bb_condition)#unconditional branch
+
+        #defining body of basic block bb_condition 
+        with self.builder.goto_block(bb_condition):
+            condition = self.visit(node.condition)# executes function corresponding to AST node node.condition
+            self.builder.cbranch(condition, bb_body, bb_end)# conditional branch statement
+
+        with self.builder.goto_block(bb_body):
+            for stmt in node.body:
+                self.visit(stmt)# nothing is returned when a statement is executed
+            self.builder.branch(bb_condition)
+
+        self.builder.position_at_end(bb_end)
 
     def BinaryExpr(self, node: BinaryExpr) -> Optional[ICMPInstr]:
         pass
