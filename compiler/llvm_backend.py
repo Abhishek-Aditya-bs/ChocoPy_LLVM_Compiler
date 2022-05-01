@@ -108,86 +108,16 @@ class LLVMBackend(Backend):
     ##################################
 
     def VarDef(self, node: VarDef):
-        if self.builder is None:
-            raise Exception("No builder is active")
-
-        # Allocate memory for variable
-        alloca = self._create_alloca(node.var.identifier.name, self._get_llvm_type(node.var.type.className))
-
-        # Store value in variable
-        value = self.visit(node.value)
-        self.builder.store(value, alloca)
+        pass
 
     def AssignStmt(self, node: AssignStmt):
         pass
 
     def IfStmt(self, node: IfStmt):
-        if self.builder is None:
-            raise Exception("No builder is active")
-        
-        # Defining 3 basic blocks of if
-        bb_condition = self.builder.append_basic_block(
-            self.module.get_unique_name("if.condition")
-        )
-        bb_then = self.builder.append_basic_block(self.module.get_unique_name("if.then"))
-        bb_else = self.builder.append_basic_block(self.module.get_unique_name("if.else"))
-        bb_end = self.builder.append_basic_block(self.module.get_unique_name("if.end"))
-
-        # Jump to condition block
-        self.builder.branch(bb_condition)
-
-        # Condition block
-        with self.builder.goto_block(bb_condition):
-            condition = self.visit(node.condition)
-            self.builder.cbranch(condition, bb_then, bb_else)
-
-        # Then block
-        with self.builder.goto_block(bb_then):
-            for stmt in node.thenBody:
-                self.visit(stmt)
-            self.builder.branch(bb_end)
-
-        # Else block
-        with self.builder.goto_block(bb_else):
-            for stmt in node.elseBody:
-                self.visit(stmt)
-            self.builder.branch(bb_end)
-
-        # End block
-        self.builder.position_at_end(bb_end)
+        pass
 
     def WhileStmt(self, node: WhileStmt):
-        # Data members of while AST nodes can be found at ./astnodes/whilestmt.py
-        
-        if self.builder is None:
-            raise Exception("No builder is active")
-        
-        # Defining 3 basic blocks of while
-        bb_condition = self.builder.append_basic_block(
-            self.module.get_unique_name("while.condition")
-        )
-        bb_body = self.builder.append_basic_block(
-            self.module.get_unique_name("while.body")
-        )
-        bb_end = self.builder.append_basic_block(
-            self.module.get_unique_name("while.end")
-        )
-
-        # Defining control flow because it doesn't explicitly go sequentially
-        self.builder.branch(bb_condition)#unconditional branch
-
-        #defining body of basic block bb_condition 
-        with self.builder.goto_block(bb_condition):
-            condition = self.visit(node.condition)# executes function corresponding to AST node node.condition
-            self.builder.cbranch(condition, bb_body, bb_end)# conditional branch statement
-
-        with self.builder.goto_block(bb_body):
-            for stmt in node.body:
-                self.visit(stmt)# nothing is returned when a statement is executed
-            self.builder.branch(bb_condition)
-
-        self.builder.position_at_end(bb_end)
-
+        pass
 
     def BinaryExpr(self, node: BinaryExpr) -> Optional[ICMPInstr]:
         pass
