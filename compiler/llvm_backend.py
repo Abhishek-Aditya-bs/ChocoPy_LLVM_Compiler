@@ -245,7 +245,11 @@ class LLVMBackend(Backend):
             raise Exception("Invalid binary operator")
 
     def Identifier(self, node: Identifier) -> LoadInstr:
-        pass
+        if self.builder is None:
+            raise Exception("No builder is active")
+
+        var_addr = self._get_var_addr(node.name)
+        return self.builder.load(var_addr)
 
     def IfExpr(self, node: IfExpr) -> PhiInstr:
         pass
