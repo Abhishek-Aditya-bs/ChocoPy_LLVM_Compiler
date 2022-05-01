@@ -114,7 +114,39 @@ class LLVMBackend(Backend):
         pass
 
     def IfStmt(self, node: IfStmt):
-        pass
+        if self.builder is None:
+            raise Exception("No builder is active")
+        
+        # Defining 3 basic blocks of if
+        bb_condition = self.builder.append_basic_block(
+            self.module.get_unique_name("if.condition")
+        )
+        bb_then = self.builder.append_basic_block(self.module.get_unique_name("if.then"))
+        bb_else = self.builder.append_basic_block(self.module.get_unique_name("if.else"))
+        bb_end = self.builder.append_basic_block(self.module.get_unique_name("if.end"))
+
+        # Jump to condition block
+        self.builder.branch(bb_condition)
+
+        # Condition block
+        with self.builder.goto_block(bb_condition):
+            condition = self.visit(node.condition)
+            self.builder.cbranch(condition, bb_then, bb_else)
+
+        # Then block
+        with self.builder.goto_block(bb_then):
+            for stmt in node.thenBody:
+                self.visit(stmt)
+            self.builder.branch(bb_end)
+
+        # Else block
+        with self.builder.goto_block(bb_else):
+            for stmt in node.elseBody:
+                self.visit(stmt)
+            self.builder.branch(bb_end)
+
+        # End block
+        self.builder.position_at_end(bb_end)
 
     def WhileStmt(self, node: WhileStmt):
         # Data members of while AST nodes can be found at ./astnodes/whilestmt.py
