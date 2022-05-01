@@ -126,12 +126,18 @@ class LLVMBackend(Backend):
             raise Exception("No builder is active")
 
         # Get address of variable
-        # print("From AssignStmt:", node.targets[0].name)
-        var_addr = self._get_var_addr(node.targets[0].name)
+        # # print("From AssignStmt:", node.targets[0].name)
+        # var_addr = self._get_var_addr(node.targets[0].name)
 
-        # Store value in variable
-        value = self.visit(node.value)
-        self.builder.store(value, var_addr)
+        # # Store value in variable
+        # value = self.visit(node.value)
+        # self.builder.store(value, var_addr)
+
+        # Loop through targets and store value in each
+        for target in node.targets:
+            var_addr = self._get_var_addr(target.name)
+            value = self.visit(node.value)
+            self.builder.store(value, var_addr)
 
     def IfStmt(self, node: IfStmt):
         if self.builder is None:
