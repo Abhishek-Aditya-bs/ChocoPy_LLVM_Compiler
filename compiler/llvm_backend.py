@@ -118,8 +118,20 @@ class LLVMBackend(Backend):
         value = self.visit(node.value)
         self.builder.store(value, alloca)
 
+        # Add variable to symbol table
+        self.func_symtab[-1][node.var.identifier.name] = alloca
+
     def AssignStmt(self, node: AssignStmt):
-        pass
+        if self.builder is None:
+            raise Exception("No builder is active")
+
+        # Get address of variable
+        # print("From AssignStmt:", node.targets[0].name)
+        var_addr = self._get_var_addr(node.targets[0].name)
+
+        # Store value in variable
+        value = self.visit(node.value)
+        self.builder.store(value, var_addr)
 
     def IfStmt(self, node: IfStmt):
         if self.builder is None:
