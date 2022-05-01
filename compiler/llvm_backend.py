@@ -108,7 +108,15 @@ class LLVMBackend(Backend):
     ##################################
 
     def VarDef(self, node: VarDef):
-        pass
+        if self.builder is None:
+            raise Exception("No builder is active")
+
+        # Allocate memory for variable
+        alloca = self._create_alloca(node.var.identifier.name, self._get_llvm_type(node.var.type.className))
+
+        # Store value in variable
+        value = self.visit(node.value)
+        self.builder.store(value, alloca)
 
     def AssignStmt(self, node: AssignStmt):
         pass
